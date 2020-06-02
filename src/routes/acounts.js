@@ -38,6 +38,37 @@ router.get('/acounts/:id', (req, res) => {
             return res.status(400).send({ error: error.message });
         }
     })
+});
+
+//Delete Acount
+router.delete('/acounts/remove/:id', (req, res) => {
+    fs.readFile(global.fileName, 'utf8', (err, data) => {
+        try {
+            if (err) throw err;
+
+            let json = JSON.parse(data);
+
+            let acountDelete = json.acounts.find(acount => acount.id === parseInt(req.params.id, 10));
+
+            if (acountDelete) {
+                let acounts = json.acounts.filter(acount => acount !== acountDelete);
+
+                json.acounts = acounts;
+
+                fs.writeFile(global.fileName, JSON.stringify(json), error => {
+                    if (error) throw error;
+
+                    return res.status(200).end();
+                });
+            } else {
+                return res.status(404).send({ error: "user not found" });
+            }
+
+
+        } catch (error) {
+            return res.status(400).send({ error: error.message });
+        }
+    })
 })
 
 //Create Acounts
