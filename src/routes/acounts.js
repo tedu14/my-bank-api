@@ -5,38 +5,37 @@ const fs = require('fs');
 //Get all acounts
 router.get('/', (req, res) => {
     fs.readFile(global.fileName, 'utf8', (err, data) => {
-        if (!err) {
+        try {
+            if (err) throw err;
+
             let json = JSON.parse(data);
 
             delete json.nextId;
 
             return res.status(200).send(json);
-        } else {
-            return res.status(400).send({ error: err.message });
+        } catch (error) {
+            return res.status(400).send({ error: error.message });
         }
     })
 });
 
 //Get acount by id
-router.get('./acounts/:id', (req, res) => {
+router.get('/acounts/:id', (req, res) => {
     fs.readFile(global.fileName, 'utf8', (err, data) => {
-        if (!err) {
-            try {
-                let json = JSON.parse(data);
+        try {
+            if (err) throw err;
 
-                const resAcount = json.acounts.find(acount => acount.id === parseInt(req.params.id, 10));
+            let json = JSON.parse(data);
 
-                if (resAcount) {
-                    return res.status(200).send(resAcount);
-                } else {
-                    return res.status(404).send({ error: "user not found" });
-                }
+            const resAcount = json.acounts.find(acount => acount.id === parseInt(req.params.id, 10));
 
-            } catch (error) {
-                return res.status(400).send({ error: err.message });
+            if (resAcount) {
+                return res.status(200).send(resAcount);
+            } else {
+                return res.status(404).send({ mss: "user not found" });
             }
-        } else {
-            return res.status(400).send({ error: err.message });
+        } catch (error) {
+            return res.status(400).send({ error: error.message });
         }
     })
 })
@@ -44,31 +43,23 @@ router.get('./acounts/:id', (req, res) => {
 //Create Acounts
 router.post('/acounts', (req, res) => {
     fs.readFile(global.fileName, 'utf8', (err, data) => {
-        if (!err) {
-            try {
-                let acount = req.body;
-                let json = JSON.parse(data);
+        try {
+            if (err) throw err;
 
-                acount = { ...acount, id: json.nextId++ };
+            let acount = req.body;
+            let json = JSON.parse(data);
 
-                json.acounts.push(acount);
+            acount = { ...acount, id: json.nextId++ };
 
-                fs.writeFile(global.fileName, JSON.stringify(json), error => {
-                    if (error) {
-                        console.warn(error);
-                        return res.status(400).send({ error: error.message })
-                    } else {
-                        return res.status(200).send('Acount create');
-                    }
-                });
+            json.acounts.push(acount);
 
-            } catch (error) {
-                console.warn(error);
-                return res.status(400).send({ error: error.message });
-            }
-        } else {
-            console.log(err);
-            return res.status(400).send({ error: err.message });
+            fs.writeFile(global.fileName, JSON.stringify(json), error => {
+                if (error) throw error;
+
+                return res.status(200).send('Acount create');
+            });
+        } catch (error) {
+            return res.status(400).send({ error: error.message });
         }
     });
 })
