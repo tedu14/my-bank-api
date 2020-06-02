@@ -93,6 +93,35 @@ router.post('/acounts', (req, res) => {
             return res.status(400).send({ error: error.message });
         }
     });
+});
+
+//Edited acount methood
+router.put('/acounts/edited/:id', (req, res) => {
+    fs.readFile(global.fileName, 'utf8', (err, data) => {
+        try {
+            if (err) throw err;
+
+            let json = JSON.parse(data);
+
+            let oldIndex = json.acounts.findIndex(acount => acount.id === parseInt(req.params.id, 10));
+
+            if (oldIndex) {
+                json.acounts[oldIndex].name = req.body.name;
+                json.acounts[oldIndex].balance = req.body.balance;
+
+                fs.writeFile(global.fileName, JSON.stringify(json), error => {
+                    if (error) throw error;
+
+                    return res.status(200).send({ message: "usuário atualizado" });
+                })
+            } else {
+                return res.status(404).send({ error: "user not found" });
+            }
+
+        } catch (error) {
+            return res.status(400).send({ error: error.message });
+        }
+    })
 })
 
 module.exports = router;
