@@ -6,6 +6,9 @@ const fs = require('fs');
 const app = express();
 const port = 3333;
 
+//Global vars
+global.fileName = "acounts.json";
+
 //Config express
 app.use(cors());
 app.use(express.json());
@@ -16,7 +19,7 @@ app.use(require('./routes'));
 
 app.listen(port, () => {
     try {
-        fs.readFile('acounts.json', 'utf8', (err, data) => {
+        fs.readFile(global.fileName, 'utf8', (err, data) => {
             if (err) {
                 const initialJson = {
                     acounts: [],
