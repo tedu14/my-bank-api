@@ -1,196 +1,178 @@
 const express = require('express');
 const router = express.Router();
-const fs = require('fs');
+const fs = require('fs').promises;
 
 //Get all acounts
-router.get('/', (req, res) => {
-    fs.readFile(global.fileName, 'utf8', (err, data) => {
-        try {
-            if (err) throw err;
+router.get('/', async (req, res) => {
 
-            let json = JSON.parse(data);
+    try {
+        let data = await fs.readFile(global.fileName, 'utf8');
 
-            delete json.nextId;
+        let json = JSON.parse(data);
 
-            return res.status(200).send(json);
-        } catch (error) {
-            return res.status(400).send({ error: error.message });
-        }
-    })
+        delete json.nextId;
+
+        return res.status(200).send(json);
+
+    } catch (error) {
+        return res.status(400).send({ error: error.message });
+    }
 });
 
 //Get acount by id
-router.get('/acounts/:id', (req, res) => {
-    fs.readFile(global.fileName, 'utf8', (err, data) => {
-        try {
-            if (err) throw err;
+router.get('/acounts/:id', async (req, res) => {
 
-            let json = JSON.parse(data);
+    try {
+        let data = await fs.readFile(global.fileName, 'utf8');
 
-            const resAcount = json.acounts.find(acount => acount.id === parseInt(req.params.id, 10));
+        let json = JSON.parse(data);
 
-            if (resAcount) {
-                return res.status(200).send(resAcount);
-            } else {
-                return res.status(404).send({ mss: "user not found" });
-            }
-        } catch (error) {
-            return res.status(400).send({ error: error.message });
+        const resAcount = json.acounts.find(acount => acount.id === parseInt(req.params.id, 10));
+
+        if (resAcount) {
+            return res.status(200).send(resAcount);
+        } else {
+            return res.status(404).send({ mss: "user not found" });
         }
-    })
+
+    } catch (error) {
+        return res.status(400).send({ error: error.message });
+    }
 });
 
 //Delete Acount
-router.delete('/acounts/remove/:id', (req, res) => {
-    fs.readFile(global.fileName, 'utf8', (err, data) => {
-        try {
-            if (err) throw err;
+router.delete('/acounts/remove/:id', async (req, res) => {
 
-            let json = JSON.parse(data);
+    try {
+        let data = await fs.readFile(global.fileName, 'utf8');
 
-            let acountDelete = json.acounts.find(acount => acount.id === parseInt(req.params.id, 10));
+        let json = JSON.parse(data);
 
-            if (acountDelete) {
-                let acounts = json.acounts.filter(acount => acount !== acountDelete);
+        let acountDelete = json.acounts.find(acount => acount.id === parseInt(req.params.id, 10));
 
-                json.acounts = acounts;
+        if (acountDelete) {
+            let acounts = json.acounts.filter(acount => acount !== acountDelete);
 
-                fs.writeFile(global.fileName, JSON.stringify(json), error => {
-                    if (error) throw error;
+            json.acounts = acounts;
 
-                    return res.status(200).end();
-                });
-            } else {
-                return res.status(404).send({ error: "user not found" });
-            }
+            await fs.writeFile(global.fileName, JSON.stringify(json))
 
-
-        } catch (error) {
-            return res.status(400).send({ error: error.message });
+            return res.status(200).end();
+        } else {
+            return res.status(404).send({ error: "user not found" });
         }
-    })
+
+    } catch (error) {
+        return res.status(400).send({ error: error.message });
+    }
 })
 
 //Create Acounts
-router.post('/acounts', (req, res) => {
-    fs.readFile(global.fileName, 'utf8', (err, data) => {
-        try {
-            if (err) throw err;
+router.post('/acounts', async (req, res) => {
 
-            let acount = req.body;
-            let json = JSON.parse(data);
+    try {
+        let data = await fs.readFile(global.fileName, 'utf8');
 
-            acount = { ...acount, id: (req.body.id ? req.body.id : json.nextId++) };
+        let acount = req.body;
+        let json = JSON.parse(data);
 
-            json.acounts.push(acount);
+        acount = { ...acount, id: (req.body.id ? req.body.id : json.nextId++) };
 
-            fs.writeFile(global.fileName, JSON.stringify(json), error => {
-                if (error) throw error;
+        json.acounts.push(acount);
 
-                return res.status(200).send('Acount create');
-            });
-        } catch (error) {
-            return res.status(400).send({ error: error.message });
-        }
-    });
+        await fs.writeFile(global.fileName, JSON.stringify(json));
+
+        return res.status(200).send('Acount create');
+
+    } catch (error) {
+        return res.status(400).send({ error: error.message });
+    }
 });
 
 //Edited acount methood
-router.put('/acounts/edited/:id', (req, res) => {
-    fs.readFile(global.fileName, 'utf8', (err, data) => {
-        try {
-            if (err) throw err;
+router.put('/acounts/edited/:id', async (req, res) => {
 
-            let json = JSON.parse(data);
+    try {
+        let data = await fs.readFile(global.fileName, 'utf8');
 
-            let oldIndex = json.acounts.findIndex(acount => acount.id === parseInt(req.params.id, 10));
+        let json = JSON.parse(data);
 
-            if (oldIndex > -1) {
-                json.acounts[oldIndex].name = req.body.name;
-                json.acounts[oldIndex].balance = req.body.balance;
+        let oldIndex = json.acounts.findIndex(acount => acount.id === parseInt(req.params.id, 10));
 
-                fs.writeFile(global.fileName, JSON.stringify(json), error => {
-                    if (error) throw error;
+        if (oldIndex > -1) {
+            json.acounts[oldIndex].name = req.body.name;
+            json.acounts[oldIndex].balance = req.body.balance;
 
-                    return res.status(200).send({ message: "usuário atualizado" });
-                })
-            } else {
-                return res.status(404).send({ error: "user not found" });
-            }
+            await fs.writeFile(global.fileName, JSON.stringify(json));
 
-        } catch (error) {
-            return res.status(400).send({ error: error.message });
+            return res.status(200).send({ message: "usuário atualizado" });
+        } else {
+            return res.status(404).send({ error: "user not found" });
         }
-    })
+
+    } catch (error) {
+        return res.status(400).send({ error: error.message });
+    }
 });
 
 //Create add money in acount
-router.post('/acounts/deposito/:id', (req, res) => {
-    fs.readFile(global.fileName, 'utf8', (err, data) => {
-        try {
+router.post('/acounts/deposito/:id', async (req, res) => {
 
-            if (err) throw err;
+    try {
+        let data = await fs.readFile(global.fileName, 'utf8');
 
-            let json = JSON.parse(data);
+        let json = JSON.parse(data);
 
-            let index = json.acounts.findIndex(acount => acount.id === parseInt(req.params.id, 10));
+        let index = json.acounts.findIndex(acount => acount.id === parseInt(req.params.id, 10));
 
-            if (index > -1) {
+        if (index > -1) {
 
-                json.acounts[index].balance += req.body.value;
+            json.acounts[index].balance += req.body.value;
 
-                fs.writeFile(global.fileName, JSON.stringify(json), e => {
-                    if (e) throw e;
+            await fs.writeFile(global.fileName, JSON.stringify(json));
 
-                    return res.status(200).send({ message: "Depósito realizado" })
-                })
+            return res.status(200).send({ message: "Depósito realizado" })
 
 
-            } else {
-                return res.status(404).send({ error: 'user not found' });
-            }
-
-        } catch (error) {
-            return res.status(400).send({ error: error.message });
+        } else {
+            return res.status(404).send({ error: 'user not found' });
         }
-    })
+
+    } catch (error) {
+        return res.status(400).send({ error: error.message });
+    }
 });
 
 //Saque
-router.put('/acounts/saque/:id', (req, res) => {
-    fs.readFile(global.fileName, 'utf8', (err, data) => {
-        try {
+router.put('/acounts/saque/:id', async (req, res) => {
 
-            if (err) throw err;
+    try {
+        let data = await fs.readFile(global.fileName, 'utf8');
 
-            let json = JSON.parse(data);
+        let json = JSON.parse(data);
 
-            let index = json.acounts.findIndex(acount => acount.id === parseInt(req.params.id, 10));
+        let index = json.acounts.findIndex(acount => acount.id === parseInt(req.params.id, 10));
 
-            if (index > -1) {
+        if (index > -1) {
 
-                if (json.acounts[index].balance >= req.body.value) {
+            if (json.acounts[index].balance >= req.body.value) {
 
-                    json.acounts[index].balance -= req.body.value;
+                json.acounts[index].balance -= req.body.value;
 
-                    fs.writeFile(global.fileName, JSON.stringify(json), e => {
-                        if (e) throw e;
+                await fs.writeFile(global.fileName, JSON.stringify(json));
 
-                        return res.status(200).send('Saque realizado!');
-                    })
-
-                } else {
-                    return res.status(200).send(`Saldo insuficiênte, valor em conta R$ ${json.acounts[index].balance}`)
-                }
+                return res.status(200).send('Saque realizado!');
 
             } else {
-                return res.status(404).send({ error: "user not found" });
+                return res.status(200).send(`Saldo insuficiênte, valor em conta R$ ${json.acounts[index].balance}`)
             }
 
-        } catch (e) {
-            return res.status(400).send({ error: e.message });
+        } else {
+            return res.status(404).send({ error: "user not found" });
         }
-    })
+    } catch (error) {
+        return res.status(400).send({ error: e.message });
+    }
 })
 
 module.exports = router;
