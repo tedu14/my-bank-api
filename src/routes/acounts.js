@@ -80,7 +80,7 @@ router.post('/acounts', (req, res) => {
             let acount = req.body;
             let json = JSON.parse(data);
 
-            acount = { ...acount, id: json.nextId++ };
+            acount = { ...acount, id: (req.body.id ? req.body.id : json.nextId++) };
 
             json.acounts.push(acount);
 
@@ -105,7 +105,7 @@ router.put('/acounts/edited/:id', (req, res) => {
 
             let oldIndex = json.acounts.findIndex(acount => acount.id === parseInt(req.params.id, 10));
 
-            if (oldIndex) {
+            if (oldIndex > -1) {
                 json.acounts[oldIndex].name = req.body.name;
                 json.acounts[oldIndex].balance = req.body.balance;
 
@@ -116,6 +116,38 @@ router.put('/acounts/edited/:id', (req, res) => {
                 })
             } else {
                 return res.status(404).send({ error: "user not found" });
+            }
+
+        } catch (error) {
+            return res.status(400).send({ error: error.message });
+        }
+    })
+});
+
+//Create add money in acount
+router.post('/acounts/deposito/:id', (req, res) => {
+    fs.readFile(global.fileName, 'utf8', (err, data) => {
+        try {
+
+            if (err) throw err;
+
+            let json = JSON.parse(data);
+
+            let index = json.acounts.findIndex(acount => acount.id === parseInt(req.params.id, 10));
+
+            if (index > -1) {
+
+                json.acounts[index].balance += req.body.value;
+
+                fs.writeFile(global.fileName, JSON.stringify(json), e => {
+                    if (e) throw e;
+
+                    return res.status(200).send({ message: "Depósito realizado" })
+                })
+
+
+            } else {
+                return res.status(404).send({ error: 'user not found' });
             }
 
         } catch (error) {
