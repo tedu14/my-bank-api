@@ -154,6 +154,43 @@ router.post('/acounts/deposito/:id', (req, res) => {
             return res.status(400).send({ error: error.message });
         }
     })
+});
+
+//Saque
+router.put('/acounts/saque/:id', (req, res) => {
+    fs.readFile(global.fileName, 'utf8', (err, data) => {
+        try {
+
+            if (err) throw err;
+
+            let json = JSON.parse(data);
+
+            let index = json.acounts.findIndex(acount => acount.id === parseInt(req.params.id, 10));
+
+            if (index > -1) {
+
+                if (json.acounts[index].balance >= req.body.value) {
+
+                    json.acounts[index].balance -= req.body.value;
+
+                    fs.writeFile(global.fileName, JSON.stringify(json), e => {
+                        if (e) throw e;
+
+                        return res.status(200).send('Saque realizado!');
+                    })
+
+                } else {
+                    return res.status(200).send(`Saldo insuficiênte, valor em conta R$ ${json.acounts[index].balance}`)
+                }
+
+            } else {
+                return res.status(404).send({ error: "user not found" });
+            }
+
+        } catch (e) {
+            return res.status(400).send({ error: e.message });
+        }
+    })
 })
 
 module.exports = router;
