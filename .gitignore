@@ -3,3 +3,5 @@ node_modules/
 acounts.json
 
 yarn.log
+
+my-bank-api.log

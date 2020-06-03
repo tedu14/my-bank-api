@@ -55,7 +55,9 @@ router.delete('/acounts/remove/:id', async (req, res) => {
 
             json.acounts = acounts;
 
-            await fs.writeFile(global.fileName, JSON.stringify(json))
+            await fs.writeFile(global.fileName, JSON.stringify(json));
+
+            logger.info(`Delete /acounts - ${JSON.stringify(acountDelete)}`);
 
             return res.status(200).end();
         } else {
@@ -76,11 +78,18 @@ router.post('/acounts', async (req, res) => {
         let acount = req.body;
         let json = JSON.parse(data);
 
-        acount = { ...acount, id: (req.body.id ? req.body.id : json.nextId++) };
+        acount = {
+            ...acount, id: (req.body.id ?
+                (req.body.id === json.nextId) ?
+                    json.nextId++ : req.body.id :
+                json.nextId++)
+        };
 
         json.acounts.push(acount);
 
         await fs.writeFile(global.fileName, JSON.stringify(json));
+
+        logger.info(`Post create /acount - ${JSON.stringify(acount)}`);
 
         return res.status(200).send('Acount create');
 
@@ -100,10 +109,17 @@ router.put('/acounts/edited/:id', async (req, res) => {
         let oldIndex = json.acounts.findIndex(acount => acount.id === parseInt(req.params.id, 10));
 
         if (oldIndex > -1) {
-            json.acounts[oldIndex].name = req.body.name;
-            json.acounts[oldIndex].balance = req.body.balance;
+            const { name, balance } = req.body;
+
+            let oldAcount = json.acounts[oldIndex];
+
+            json.acounts[oldIndex].name = name;
+            json.acounts[oldIndex].balance = balance;
 
             await fs.writeFile(global.fileName, JSON.stringify(json));
+
+            logger.info(`Put editing /acounts: old acount - ${JSON.stringify(oldAcount)}, new acount - ${JSON.stringify(json.acounts[oldIndex])}`);
+
 
             return res.status(200).send({ message: "usuário atualizado" });
         } else {
@@ -115,7 +131,7 @@ router.put('/acounts/edited/:id', async (req, res) => {
     }
 });
 
-//Create add money in acount
+//Deposint in acount
 router.post('/acounts/deposito/:id', async (req, res) => {
 
     try {
@@ -130,6 +146,8 @@ router.post('/acounts/deposito/:id', async (req, res) => {
             json.acounts[index].balance += req.body.value;
 
             await fs.writeFile(global.fileName, JSON.stringify(json));
+
+            logger.info(`Post deposit /acounts - value: ${req.body.value} - acount: ${JSON.stringify(json.acounts[index])}`);
 
             return res.status(200).send({ message: "Depósito realizado" })
 
@@ -161,10 +179,12 @@ router.put('/acounts/saque/:id', async (req, res) => {
 
                 await fs.writeFile(global.fileName, JSON.stringify(json));
 
+                logger.info(`Put saque /acounts - value: ${req.body.value} - acount: ${JSON.stringify(json.acounts[index])}`);
+
                 return res.status(200).send('Saque realizado!');
 
             } else {
-                return res.status(200).send(`Saldo insuficiênte, valor em conta R$ ${json.acounts[index].balance}`)
+                return res.status(406).send(`Saldo insuficiênte, valor em conta R$ ${json.acounts[index].balance}`)
             }
 
         } else {
